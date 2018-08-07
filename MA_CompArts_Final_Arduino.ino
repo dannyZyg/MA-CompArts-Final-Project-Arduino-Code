@@ -1,6 +1,12 @@
-
 // Starter code from https://learn.adafruit.com/multi-tasking-the-arduino-part-3/overview
 //multitasking the arduino with neopixels
+
+// serial output code and conversion from Joshua Noble's "Programming Interactivity: A Designer's Guide to
+// Processing, Arduino, and openFrameworks" (p. 228-229, 2012)
+// available at https://books.google.co.uk/books?id=sAsHA1HM1WcC&pg=PA225&lpg=PA225&dq=serial+input+from+arduino+openframeworks&source=bl&ots=KHz3UccApe&sig=mI6JR-iB4WiLT9Q-opHa-OZiNZQ&hl=en&sa=X&ved=0ahUKEwjmvtnD_I7aAhWBWhQKHW5EAKw4ChDoAQg1MAI#v=snippet&q=ofSerial&f=false
+
+// Adafruit VL53L0X sensor code from example
+// available at https://learn.adafruit.com/adafruit-vl53l0x-micro-lidar-distance-sensor-breakout/arduino-code
 
 
 
@@ -12,7 +18,7 @@
 
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
-int sensorVal;
+int val;
 
 // Pattern types supported:
 enum  pattern { NONE, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE };
@@ -326,22 +332,21 @@ void setup()
   // Kick off a pattern
   Ring1.TheaterChase(Ring1.Color(255, 255, 0), Ring1.Color(0, 0, 50), 100);
 
-  Serial.begin(115200);
 
-  // wait until serial port opens for native USB devices
-  while (! Serial) {
+  while (! Serial) {        // wait until serial port opens for native USB devices
     delay(1);
   }
 
-  Serial.println("Adafruit VL53L0X test");
+  // serial.print calls are commented out to avoid adding unwanted info to what is sent to openFrameworks,
+  // but are useful for debugging, so not removed completely
+
+  //Serial.println("Adafruit VL53L0X test");
   if (!lox.begin()) {
-    Serial.println(F("Failed to boot VL53L0X"));
+    //Serial.println(F("Failed to boot VL53L0X"));
     while (1);
   }
-  // power
-  Serial.println(F("VL53L0X API Simple Ranging example\n\n"));
 
-
+  //Serial.println(F("VL53L0X API Simple Ranging example\n\n"));
 
 
 }
@@ -352,31 +357,40 @@ void loop()
 
   VL53L0X_RangingMeasurementData_t measure;
 
-  Serial.print("Reading a measurement... ");
-  lox.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
+  lox.rangingTest(&measure, false);    // pass in 'true' to get debug data printout!
 
-  if (measure.RangeStatus != 4) {  // phase failures have incorrect data
-    Serial.print("Distance (mm): "); Serial.println(measure.RangeMilliMeter);
-  } else {
-    Serial.println(" out of range ");
+  val = measure.RangeMilliMeter;       // set the value variable to the distance from the sensor
+
+  if (Serial.available() > 0) {
+    Serial.read();
+    printVal(val);
   }
 
-  delay(10);
-  int reading = measure.RangeMilliMeter;
+  //  Serial.print("Reading a measurement... ");
 
-  
+  if (measure.RangeStatus != 4) {  // phase failures have incorrect data
+    ///   Serial.print("Distance (mm): ");
+    //    Serial.println(val,'\n');
+  } else {
+    //    Serial.println(" out of range ");
+  }
+
+  //  Serial.println(val);
+  delay(1);
+
+
   // Update the rings.
   Ring1.Update();
 
   // Switch patterns on a button press:
   //  if (digitalRead(8) == LOW) // Button #1 pressed
-  if (reading < 200)
+  if (val < 200)
   {
     // Switch Ring1 to FADE pattern
     Ring1.ActivePattern = FADE;
     Ring1.Interval = 20;
   }
-  else if(reading > 200 && reading < 600)
+  else if (val > 200 && val < 600)
   {
     // Switch to alternating color wipes on Rings1 and 2
     Ring1.ActivePattern = COLOR_WIPE;
@@ -410,4 +424,17 @@ void Ring1Complete()
   }
 }
 
+
+// ----------------------------------------------------------------------------
+void printVal(int val){
+  
+    // break the integer into two bytes
+    // to be read and converted back into integers in openFrameworks
+    
+    byte highByte = ((val >> 8) & 0xFF); 
+    byte lowByte = ((val >> 0) & 0xFF); 
+  
+    Serial.write(highByte);
+    Serial.write(lowByte); 
+}
 

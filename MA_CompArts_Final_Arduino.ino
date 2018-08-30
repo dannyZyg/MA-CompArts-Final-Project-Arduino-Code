@@ -13,12 +13,19 @@
 #include <Adafruit_NeoPixel.h>
 #include "Adafruit_VL53L0X.h"
 
-#define BRIGHTNESS 50
+#define BRIGHTNESS 255
 
 
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 int val;
+int scannerSpeed = 30;
+bool trigger = false;
+bool sendOut = false;
+bool sequenceOn = false;
+unsigned long millisNow = 0;
+unsigned long startTime = 0;
+
 
 // Pattern types supported:
 enum  pattern { NONE, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE };
@@ -322,8 +329,8 @@ void setup()
 {
   Serial.begin(115200);
 
-  pinMode(8, INPUT_PULLUP);
-  pinMode(9, INPUT_PULLUP);
+  //  pinMode(8, INPUT_PULLUP);
+  //  pinMode(9, INPUT_PULLUP);
 
   // Initialize all the pixelStrips
   Ring1.begin();
@@ -355,6 +362,7 @@ void setup()
 void loop()
 {
 
+
   VL53L0X_RangingMeasurementData_t measure;
 
   lox.rangingTest(&measure, false);    // pass in 'true' to get debug data printout!
@@ -375,33 +383,72 @@ void loop()
     //    Serial.println(" out of range ");
   }
 
-  //  Serial.println(val);
+  //    Serial.println(val);
   delay(1);
 
 
   // Update the rings.
   Ring1.Update();
 
+
+
+
   // Switch patterns on a button press:
   //  if (digitalRead(8) == LOW) // Button #1 pressed
-  if (val < 200)
-  {
-    // Switch Ring1 to FADE pattern
-    Ring1.ActivePattern = FADE;
-    Ring1.Interval = 20;
-  }
-  else if (val > 200 && val < 600)
-  {
-    // Switch to alternating color wipes on Rings1 and 2
-    Ring1.ActivePattern = COLOR_WIPE;
+  //  if (val < 200)
+  //  {
+  //    // Restore all pattern parameters to normal values
+  ////    Ring1.ActivePattern = SCANNER;
+  ////    Ring1.Interval = 20;
+  //  }
+  //  else if (val < 600)
+  //  {
+  //    // Switch to alternating color wipes on Rings1 and 2
+  //    Ring1.ActivePattern = SCANNER;
+  //    Ring1.Interval = scannerSpeed;
+  //    scannerSpeed -= 1;
+  //
+  //  }
 
+
+  float valToSpeed = map(val, 0, 600, 0, 255);
+
+  //  sendOut = true;
+
+  if (val < 8190 && val != 0) trigger = true;
+  //  Serial.println(val);
+
+  if (trigger) {
+    Ring1.ActivePattern = SCANNER;
+    Ring1.Interval = scannerSpeed;
   }
+
+  //  sendOut = true;
+
+
   else // Back to normal operation
   {
-    // Restore all pattern parameters to normal values
-    Ring1.ActivePattern = RAINBOW_CYCLE;
+    //    sequenceOn = false;
+    // Switch Ring1 to FADE pattern
+    Ring1.ActivePattern = FADE;
     Ring1.Interval = 100;
   }
+  //
+  //  if(sendOut){
+  //    sequenceOn = true;
+  //    sendOut = false;
+  //  }
+
+  if (sequenceOn) {
+    if (millis() - startTime > 3000) {
+      sequenceOn = false;
+    }
+
+  }
+
+
+
+  //  Serial.println(sequenceOn);
 
 }
 
@@ -412,6 +459,31 @@ void loop()
 // Ring1 Completion Callback
 void Ring1Complete()
 {
+
+  if (trigger) {
+
+    if (scannerSpeed > 10) scannerSpeed -= 10;
+    if (scannerSpeed <= 10) scannerSpeed -= 1;
+    if (scannerSpeed <= 1) {
+      scannerSpeed = 1;
+      sequenceOn = true;
+    }
+
+
+    if (scannerSpeed <= 1) {
+      sendOut = true;
+
+    }
+
+    if (sendOut) {
+      trigger = false;
+      startTime = millis();
+      sendOut = false;
+      scannerSpeed = 35;
+      //      sequenceOn = false;
+    }
+  }
+
   if (digitalRead(9) == LOW)  // Button #2 pressed
   {
     // Alternate color-wipe patterns with Ring2
@@ -426,15 +498,16 @@ void Ring1Complete()
 
 
 // ----------------------------------------------------------------------------
-void printVal(int val){
-  
-    // break the integer into two bytes
-    // to be read and converted back into integers in openFrameworks
-    
-    byte highByte = ((val >> 8) & 0xFF); 
-    byte lowByte = ((val >> 0) & 0xFF); 
-  
-    Serial.write(highByte);
-    Serial.write(lowByte); 
+void printVal(int val) {
+
+  // break the integer into two bytes
+  // to be read and converted back into integers in openFrameworks
+
+  byte highByte = ((val >> 8) & 0xFF);
+  byte lowByte = ((val >> 0) & 0xFF);
+
+  Serial.write(highByte);
+  Serial.write(lowByte);
+  Serial.write(sequenceOn);
 }
 

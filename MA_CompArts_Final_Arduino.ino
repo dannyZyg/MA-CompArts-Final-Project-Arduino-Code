@@ -415,12 +415,14 @@ void loop()
 
   //  sendOut = true;
 
-  if (val < 8190 && val != 0) trigger = true;
+  if (val < 350 && val != 0) trigger = true;
   //  Serial.println(val);
+  else(trigger = false);
 
   if (trigger) {
     Ring1.ActivePattern = SCANNER;
-    Ring1.Interval = scannerSpeed;
+    Ring1.Interval = 2;
+    sequenceOn = true;
   }
 
   //  sendOut = true;
@@ -432,6 +434,7 @@ void loop()
     // Switch Ring1 to FADE pattern
     Ring1.ActivePattern = FADE;
     Ring1.Interval = 100;
+    sequenceOn = false;
   }
   //
   //  if(sendOut){
@@ -439,12 +442,11 @@ void loop()
   //    sendOut = false;
   //  }
 
-  if (sequenceOn) {
-    if (millis() - startTime > 3000) {
-      sequenceOn = false;
-    }
-
-  }
+//  if (sequenceOn) {
+//    if (millis() - startTime > 5000) {
+//      sequenceOn = false;
+//    }
+//  }
 
 
 
@@ -461,27 +463,27 @@ void Ring1Complete()
 {
 
   if (trigger) {
-
-    if (scannerSpeed > 10) scannerSpeed -= 10;
-    if (scannerSpeed <= 10) scannerSpeed -= 1;
-    if (scannerSpeed <= 1) {
-      scannerSpeed = 1;
-      sequenceOn = true;
-    }
-
-
-    if (scannerSpeed <= 1) {
-      sendOut = true;
-
-    }
-
-    if (sendOut) {
-      trigger = false;
-      startTime = millis();
-      sendOut = false;
-      scannerSpeed = 35;
-      //      sequenceOn = false;
-    }
+//    sequenceOn = true;
+//    if (scannerSpeed > 10) scannerSpeed -= 10;
+//    if (scannerSpeed <= 10) scannerSpeed -= 1;
+//    if (scannerSpeed <= 1) {
+//      scannerSpeed = 1;
+      //      sequenceOn = true;
+//    }
+//
+//
+//    if (scannerSpeed <= 1) {
+//      sendOut = true;
+//
+//    }
+//
+//    if (sendOut) {
+//      trigger = false;
+//      startTime = millis();
+//      sendOut = false;
+//      scannerSpeed = 35;
+//                  sequenceOn = false;
+//    }
   }
 
   if (digitalRead(9) == LOW)  // Button #2 pressed

@@ -349,8 +349,6 @@ void setup()
 // Main loop
 void loop()
 {
-
-
   VL53L0X_RangingMeasurementData_t measure;
 
   lox.rangingTest(&measure, false);    // pass in 'true' to get debug data printout!
@@ -375,34 +373,23 @@ void loop()
   delay(1);
 
 
-  // Update the rings.
+  // Update the ring.
   Ring1.Update();
 
-
-
-
+// create the conditions for a trigger
   if (val < 350 && val != 0) trigger = true;
-
-//  if (val < 350 && val > 25) sequenceOn = true;
-
-
-
-
   else(trigger = false);
 
+// if triggered, do the following
   if (trigger) {
     Ring1.ActivePattern = SCANNER;
     Ring1.Interval = 2;
-//    if (!timerOn) timerOn = true;
   }
 
   else // Back to normal operation
   {
-    //    sequenceOn = false;
-    // Switch Ring1 to FADE pattern
     Ring1.ActivePattern = FADE;
     Ring1.Interval = 100;
-//    sequenceOn = false;
   }
 }
 
@@ -412,45 +399,13 @@ void loop()
 
 // Ring1 Completion Callback
 void Ring1Complete()
-{
-
-  if (trigger) {
-    //    sequenceOn = true;
-    //    if (scannerSpeed > 10) scannerSpeed -= 10;
-    //    if (scannerSpeed <= 10) scannerSpeed -= 1;
-    //    if (scannerSpeed <= 1) {
-    //      scannerSpeed = 1;
-    //      sequenceOn = true;
-    //    }
-    //
-    //
-    //    if (scannerSpeed <= 1) {
-    //      sendOut = true;
-    //
-    //    }
-    //
-    //    if (sendOut) {
-    //      trigger = false;
-    //      startTime = millis();
-    //      sendOut = false;
-    //      scannerSpeed = 35;
-    //                  sequenceOn = false;
-    //    }
-  }
-
-  if (digitalRead(9) == LOW)  // Button #2 pressed
-  {
-    // Alternate color-wipe patterns with Ring2
-    Ring1.Color1 = Ring1.Wheel(random(255));
-    Ring1.Interval = 20000;
-  }
-  else  // Retrn to normal
-  {
+{   //reverse the direction
     Ring1.Reverse();
-  }
 }
 
 
+// ----------------------------------------------------------------------------
+// Send the sensor value to openFrameworks
 // ----------------------------------------------------------------------------
 void printVal(int val) {
 
@@ -462,6 +417,5 @@ void printVal(int val) {
 
   Serial.write(highByte);
   Serial.write(lowByte);
-//  Serial.write(sequenceOn);
 }
 

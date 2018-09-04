@@ -8,24 +8,18 @@
 // Adafruit VL53L0X sensor code from example
 // available at https://learn.adafruit.com/adafruit-vl53l0x-micro-lidar-distance-sensor-breakout/arduino-code
 
-
+// This Arduino code uses a proximity sensor to detect hand pressence and create lighting effects.
+// The sensor value is sent to openFrameworks for further processing.
 
 #include <Adafruit_NeoPixel.h>
 #include "Adafruit_VL53L0X.h"
 
 #define BRIGHTNESS 255
 
-
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
 int val;
-int scannerSpeed = 30;
 bool trigger = false;
-bool sendOut = false;
-bool sequenceOn = false;
-unsigned long millisNow = 0;
-unsigned long startTime = 0;
-
 
 // Pattern types supported:
 enum  pattern { NONE, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE };
@@ -318,27 +312,21 @@ class NeoPatterns : public Adafruit_NeoPixel
 
 void Ring1Complete();
 
-
-// Define some NeoPatterns for the two rings and the stick
-//  as well as some completion routines
+// create one ring to be used.
 NeoPatterns Ring1(24, 6, NEO_GRBW + NEO_KHZ800, &Ring1Complete);
 
 
-// Initialize everything and prepare to start
+// Initialise everything and prepare to start
 void setup()
 {
   Serial.begin(115200);
 
-  //  pinMode(8, INPUT_PULLUP);
-  //  pinMode(9, INPUT_PULLUP);
-
-  // Initialize all the pixelStrips
+  // Initialise the ring
   Ring1.begin();
   Ring1.setBrightness(BRIGHTNESS);
 
   // Kick off a pattern
   Ring1.TheaterChase(Ring1.Color(255, 255, 0), Ring1.Color(0, 0, 50), 100);
-
 
   while (! Serial) {        // wait until serial port opens for native USB devices
     delay(1);
@@ -393,40 +381,20 @@ void loop()
 
 
 
-  // Switch patterns on a button press:
-  //  if (digitalRead(8) == LOW) // Button #1 pressed
-  //  if (val < 200)
-  //  {
-  //    // Restore all pattern parameters to normal values
-  ////    Ring1.ActivePattern = SCANNER;
-  ////    Ring1.Interval = 20;
-  //  }
-  //  else if (val < 600)
-  //  {
-  //    // Switch to alternating color wipes on Rings1 and 2
-  //    Ring1.ActivePattern = SCANNER;
-  //    Ring1.Interval = scannerSpeed;
-  //    scannerSpeed -= 1;
-  //
-  //  }
-
-
-  float valToSpeed = map(val, 0, 600, 0, 255);
-
-  //  sendOut = true;
-
   if (val < 350 && val != 0) trigger = true;
-  //  Serial.println(val);
+
+//  if (val < 350 && val > 25) sequenceOn = true;
+
+
+
+
   else(trigger = false);
 
   if (trigger) {
     Ring1.ActivePattern = SCANNER;
     Ring1.Interval = 2;
-    sequenceOn = true;
+//    if (!timerOn) timerOn = true;
   }
-
-  //  sendOut = true;
-
 
   else // Back to normal operation
   {
@@ -434,24 +402,8 @@ void loop()
     // Switch Ring1 to FADE pattern
     Ring1.ActivePattern = FADE;
     Ring1.Interval = 100;
-    sequenceOn = false;
+//    sequenceOn = false;
   }
-  //
-  //  if(sendOut){
-  //    sequenceOn = true;
-  //    sendOut = false;
-  //  }
-
-//  if (sequenceOn) {
-//    if (millis() - startTime > 5000) {
-//      sequenceOn = false;
-//    }
-//  }
-
-
-
-  //  Serial.println(sequenceOn);
-
 }
 
 //------------------------------------------------------------
@@ -463,27 +415,27 @@ void Ring1Complete()
 {
 
   if (trigger) {
-//    sequenceOn = true;
-//    if (scannerSpeed > 10) scannerSpeed -= 10;
-//    if (scannerSpeed <= 10) scannerSpeed -= 1;
-//    if (scannerSpeed <= 1) {
-//      scannerSpeed = 1;
-      //      sequenceOn = true;
-//    }
-//
-//
-//    if (scannerSpeed <= 1) {
-//      sendOut = true;
-//
-//    }
-//
-//    if (sendOut) {
-//      trigger = false;
-//      startTime = millis();
-//      sendOut = false;
-//      scannerSpeed = 35;
-//                  sequenceOn = false;
-//    }
+    //    sequenceOn = true;
+    //    if (scannerSpeed > 10) scannerSpeed -= 10;
+    //    if (scannerSpeed <= 10) scannerSpeed -= 1;
+    //    if (scannerSpeed <= 1) {
+    //      scannerSpeed = 1;
+    //      sequenceOn = true;
+    //    }
+    //
+    //
+    //    if (scannerSpeed <= 1) {
+    //      sendOut = true;
+    //
+    //    }
+    //
+    //    if (sendOut) {
+    //      trigger = false;
+    //      startTime = millis();
+    //      sendOut = false;
+    //      scannerSpeed = 35;
+    //                  sequenceOn = false;
+    //    }
   }
 
   if (digitalRead(9) == LOW)  // Button #2 pressed
@@ -510,6 +462,6 @@ void printVal(int val) {
 
   Serial.write(highByte);
   Serial.write(lowByte);
-  Serial.write(sequenceOn);
+//  Serial.write(sequenceOn);
 }
 
